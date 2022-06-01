@@ -1,0 +1,68 @@
+<?xml version="1.0"?>
+<launch>	
+    <include file="$(find mbot_description)/launch/robot_play.launch"/>
+
+	<include file="$(find rf2o_laser_odometry)/launch/rf2o_laser_odometry.launch"/>
+
+	<include file="$(find twist_mux)/launch/twist_mux.launch"/>
+
+
+	<!-- Allow for Gazebo to broadcast odom -->
+ 	<!--node pkg="racecar_run" name="gazebo_odometry_node" type="gazebo_odometry.py"/-->
+
+	<!-- <arg name="map_file" default="$(find mbot_description)/map/amcl.yaml"/> -->
+	<arg name="map_file" default="$(find mbot_description)/map/hospital_v3.yaml"/>
+	<!-- <arg name="map_file" default="$(find slam_sim_demo)/maps/ISCAS_Museum.yaml"/> -->
+	<node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)"/>
+
+	<include file="$(find iris_lama_ros)/launch/loc2d.launch">
+		<arg name="initial_pose_x" default="0.0"/>
+		<arg name="initial_pose_y" default="10.0"/>
+		<arg name="initial_yaw"  default="0.0"/>
+	</include>
+
+    <!-- Robot_Localization -->
+    <node pkg="robot_localization" type="ekf_localization_node" name="ekf_se" clear_params="true">
+        <rosparam command="load" file="$(find mbot_description)/param/ekf_params.yaml" />
+    </node>  
+
+	<!-- GPS -->
+    <node pkg="gps_model" type="gps_model_node" name="gps" />
+
+
+	<!--Localization -->
+  	<arg name="initial_pose_x" default="0.0"/>
+ 	<arg name="initial_pose_y" default="10.0"/>
+  	<arg name="initial_pose_a" default="0.0"/>
+  	<arg name="custom_amcl_launch_file" default="$(find mbot_description)/launch/amcl.launch.xml"/> 
+
+	<include file="$(arg custom_amcl_launch_file)">
+    <arg name="initial_pose_x" value="$(arg initial_pose_x)"/>
+    <arg name="initial_pose_y" value="$(arg initial_pose_y)"/>
+    <arg name="initial_pose_a" value="$(arg initial_pose_a)"/>
+	</include>
+
+	<!-- Move base -->
+    <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen" clear_params="true">
+	    <param name="controller_frequency" value="10.0"/> 
+	    <param name="controller_patiente" value="15.0"/>
+		<!-- <param name="base_global_planner" value="potential_field/potentialField"/> -->
+        <rosparam file="$(find mbot_description)/param/costmap_common_params.yaml" command="load" ns="global_costmap" />
+        <rosparam file="$(find mbot_description)/param/costmap_common_params.yaml" command="load" ns="local_costmap" />
+        <rosparam file="$(find mbot_description)/param/local_costmap_params.yaml" command="load" />
+        <rosparam file="$(find mbot_description)/param/global_costmap_params.yaml" command="load" />
+
+        <rosparam file="$(find mbot_description)/param/teb_local_planner_params.yaml" command="load" />
+		<rosparam file="$(find mbot_description)/param/move_base_params.yaml" command="load" />
+		<remap from="/cmd_vel" to="/nouse/cmd_vel" />
+		<!-- <remap from="/odom" to="/vesc/odom" />  -->
+    </node>
+	
+	<!-- L1 controller -->  
+    <!-- <node pkg="tracking" type="tracking_node" name="control" output="screen"/>        -->
+	<include file="$(find tracking)/launch/track.launch"/>
+	<!-- <node pkg="tracking" name="newpath" type="newpath.py" output="screen"/> -->
+
+	<!--启动rviz -->
+    <node pkg="rviz" type="rviz" name="rviz" args="-d $(find racecar_run)/config/nav.rviz"/>
+</launch>

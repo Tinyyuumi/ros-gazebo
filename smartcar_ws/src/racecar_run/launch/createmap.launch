@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<launch>	
+  	<include file="$(find racecar_description)/launch/racecar.launch"/>
+
+  	<include file="$(find racecar_control)/launch/racecar_control.launch"/>
+
+	<!-- Allow for Gazebo to broadcast odom -->
+ 	<node pkg="racecar_run" name="gazebo_odometry_node" type="gazebo_odometry.py"/>
+
+	<include file="$(find racecar_run)/launch/gampping.launch"/>
+	  <!--启动rviz -->
+    <node pkg="rviz" type="rviz" name="rviz" args="-d $(find racecar_run)/config/new_gmapping.rviz"/>
+</launch>

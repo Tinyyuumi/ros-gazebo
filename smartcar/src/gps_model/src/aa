@@ -1,0 +1,4 @@
+#test 表示的是Project
+g++ helloworld.cpp -o test
+./test
+

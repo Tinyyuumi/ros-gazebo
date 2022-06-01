@@ -1,0 +1,3 @@
+运行roslaunch mbot_description robot_play.launch 打开gazebo仿真环境
+运行rosrun carrace path.py 运行小车
+

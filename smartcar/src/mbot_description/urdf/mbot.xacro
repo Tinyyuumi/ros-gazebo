@@ -1,0 +1,216 @@
+<?xml version="1.0" ?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" 
+    xmlns:sensor="http://playerstage.sourceforge.net/gazebo/xmlschema/#sensor"
+        xmlns:controller="http://playerstage.sourceforge.net/gazebo/xmlschema/#controller"
+        xmlns:interface="http://playerstage.sourceforge.net/gazebo/xmlschema/#interface"
+    name="robot1">
+	<!-- <xacro:include filename="$(find mbot_description)/urdf/sensors/camera.xacro"/> -->
+    <xacro:include filename="$(find mbot_description)/urdf/sensors/imu.xacro"/>
+    <xacro:include filename="$(find mbot_description)/urdf/sensors/lidar.xacro"/>
+    <xacro:macro name="default_inertial" params="mass">
+               <inertial>
+                       <mass value="${mass}" />
+                       <inertia ixx="1.0" ixy="0.0" ixz="0.0"
+                                iyy="1.0" iyz="0.0"
+                                izz="1.0" />
+               </inertial>
+    </xacro:macro>
+
+
+    <link name="base_link">
+        <visual>
+            <origin xyz=" 0 0 0" rpy="0 0 0" />
+            <geometry>
+                <cylinder length="0.16" radius="0.20"/>
+            </geometry>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <geometry>
+                <cylinder length="0.16" radius="0.20"/>
+            </geometry>
+        </collision>
+	 <xacro:default_inertial mass="25.0"/>
+    </link>
+
+
+    <gazebo reference="base_link">
+    	<material>Gazebo/Blue</material>
+	<turnGravityOff>false</turnGravityOff>
+    </gazebo>
+     
+
+    <xacro:macro name="side_wheel" params="LR sym1">
+        <joint name="${LR}_wheel_joint" type="continuous">
+            <origin xyz="0 ${sym1} -0.05" rpy="0 0 0"/>
+            <parent link="base_link"/>
+            <child link="${LR}_wheel_link"/>
+            <axis xyz="0 1 0"/>
+        </joint>
+
+        <link name="${LR}_wheel_link">
+            <visual>
+                <origin xyz="0 0 0" rpy="1.5707 0 0" />
+                <geometry>
+                    <cylinder radius="0.06" length = "0.025"/>
+                </geometry>
+                <!-- <material name="white"/> -->
+            </visual>
+            <collision>
+            <origin xyz="0 0 0" rpy="1.5707 0 0" />
+            <geometry>
+                    <cylinder length="0.025" radius="0.06"/>
+            </geometry>
+            </collision>
+            <xacro:default_inertial mass="10"/>
+        </link>
+
+    </xacro:macro>
+
+    <xacro:macro name="auxiliary_wheel" params="LR sym1">
+        <joint name="${LR}_caster_joint" type="continuous">
+            <origin xyz="${sym1} 0 -0.095" rpy="0 0 0"/>
+            <parent link="base_link"/>
+            <child link="${LR}_caster_link"/>
+            <axis xyz="0 1 0"/>
+        </joint>
+
+        <link name="${LR}_caster_link">
+            <visual>
+                <origin xyz="0 0 0" rpy="0 0 0"/>
+                <geometry>
+                    <sphere radius="0.015" />
+                </geometry>
+                <!-- <material name="black"/> -->
+            </visual>
+            <collision>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                    <sphere radius="0.015"/>
+            </geometry>
+            </collision>
+            <xacro:default_inertial mass="0.5"/>
+        </link>
+
+    </xacro:macro>
+
+<xacro:side_wheel LR="left" sym1="0.22" />
+<xacro:side_wheel LR="right" sym1="-0.22" />
+<xacro:auxiliary_wheel LR="front" sym1="0.18" />
+<xacro:auxiliary_wheel LR="back" sym1="-0.18" />
+
+<!--yun tai-->
+<!-- <link name="yun_link">
+    <visual>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry >
+            <box size="0.03 0.05 0.02" />
+        </geometry>
+    </visual>
+    <collision>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry >
+            <box size="0.03 0.05 0.02" />
+        </geometry>
+    </collision> 
+    <xacro:default_inertial mass="0.1"/>
+</link>
+<joint name="yun_joint" type="revolute">
+    <parent link="base_link"/>
+    <child link="yun_link"/>
+    <origin xyz="0.18 0 0.10" rpy="0 0 0" />
+    <axis xyz="0 0 1" />
+    <limit lower="-1.745" upper="2.356" effort="10"
+	   velocity="1.0" />
+    <joint_properties damping="0.0" friction="0.0"/>
+</joint> -->
+
+<!--camera-->
+<!-- <joint name="camera_joint" type="fixed">
+    <origin xyz="0 0 0.02" rpy="0 0 0"/>
+    <parent link="base_link"/>
+    <child link="camera_link"/>
+</joint>
+<xacro:usb_camera prefix="camera"/> -->
+
+<!--lidar-->
+<joint name="lidar_joint" type="fixed">
+    <origin xyz="0 0 0.1" rpy="0 0 0"/>
+    <parent link="base_link"/>
+    <child link="lidar_link"/>
+</joint>
+<xacro:lidar prefix="lidar"/>
+
+<!--imu-->
+<joint name="imu_joint" type="fixed">
+    <origin xyz="0.1 0 0.1" rpy="0 0 0"/>
+    <parent link="base_link"/>
+    <child link="imu_link"/>
+</joint>
+<xacro:imu prefix="imu"/>
+
+<!-- Ros_Control-->
+<xacro:macro name="joint_control" params="TN JN AN">
+    <transmission name="${TN}">
+        <type>transmission_interface/SimpleTransmission</type>
+        <joint name="${JN}">
+            <hardwareInterface>EffortJointInterface</hardwareInterface>
+        </joint>
+        <actuator name="${AN}">
+            <hardwareInterface>EffortJointInterface</hardwareInterface>
+            <mechanicalReduction>1</mechanicalReduction>
+        </actuator>
+    </transmission>
+</xacro:macro>
+
+<xacro:joint_control TN="trans_left" JN="left_wheel_joint" AN="motor_left" />
+<xacro:joint_control TN="trans_right" JN="right_wheel_joint" AN="motor_right" />
+<xacro:joint_control TN="trans_yun" JN="yun_joint" AN="motor_yun" />
+
+
+<!-- controller -->
+<gazebo>
+    <plugin name="differential_drive_controller" filename="libgazebo_ros_diff_drive.so">
+        <rosDebugLevel>Debug</rosDebugLevel>
+        <publishWheelTF>true</publishWheelTF>
+        <robotNamespace>/</robotNamespace>
+        <publishTf>1</publishTf>
+        <publishWheelJointState>true</publishWheelJointState>
+        <alwaysOn>true</alwaysOn>
+        <updateRate>100.0</updateRate>
+        <legacyMode>true</legacyMode>
+        <leftJoint>left_wheel_joint</leftJoint>
+        <rightJoint>right_wheel_joint</rightJoint>
+        <wheelSeparation>0.44</wheelSeparation>
+        <wheelDiameter>0.12</wheelDiameter>
+        <broadcastTF>1</broadcastTF>
+        <wheelTorque>30</wheelTorque>
+        <wheelAcceleration>1.8</wheelAcceleration>
+        <commandTopic>cmd_vel</commandTopic>
+        <odometryFrame>odom</odometryFrame> 
+        <odometryTopic>odom</odometryTopic> 
+        <robotBaseFrame>base_link</robotBaseFrame>
+    </plugin>
+</gazebo>
+
+
+<gazebo>
+    <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
+        <robotNamespace>/robot</robotNamespace>
+        <controlPeriod>0.01</controlPeriod>
+        <robotSimType>gazebo_ros_control/DefaultRobotHWSim</robotSimType>
+    </plugin>
+</gazebo>
+
+  <!-- <gazebo>
+      <plugin name="gps" filename="libhector_gazebo_ros_gps.so">
+          <updateRate>10.0</updateRate>
+          <topicName>sensor_msgs/NavSatFix</topicName>
+          <gaussianNoise>0.0 0.0 0.0</gaussianNoise>
+          <offset>0 0 0</offset>
+          <velocityGaussianNoise>0 0 0</velocityGaussianNoise>
+          <frameId>base_link</frameId>
+      </plugin>
+    </gazebo> -->
+
+</robot>

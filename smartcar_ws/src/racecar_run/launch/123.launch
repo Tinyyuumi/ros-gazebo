@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<launch>	
+  	<include file="$(find racecar_description)/launch/racecar.launch"/>
+
+  	<include file="$(find racecar_control)/launch/racecar_control.launch"/>
+
+
+	<!-- Allow for Gazebo to broadcast odom -->
+ 	<node pkg="racecar_run" name="gazebo_odometry_node" type="gazebo_odometry.py"/>
+
+	<arg name="map_file" default="$(find racecar_run)/map/mymap.yaml"/>
+	<node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)"/>
+	<include file="$(find iris_lama_ros)/launch/loc2d.launch"/>
+	<!-- Localization -->
+	
+  	<arg name="initial_pose_x" default="0.0"/>
+ 	<arg name="initial_pose_y" default="0.0"/>
+  	<arg name="initial_pose_a" default="0.0"/>
+  	<arg name="custom_amcl_launch_file" default="$(find racecar_run)/launch/include/amcl.launch.xml"/> 
+
+	<include file="$(arg custom_amcl_launch_file)">
+    <arg name="initial_pose_x" value="$(arg initial_pose_x)"/>
+    <arg name="initial_pose_y" value="$(arg initial_pose_y)"/>
+    <arg name="initial_pose_a" value="$(arg initial_pose_a)"/>
+  	</include>
+
+	<!-- <node name="pose_subscriber" pkg="mbot_description" type="pose.py"/> -->
+	<!--启动rviz -->
+    <node pkg="rviz" type="rviz" name="rviz" args="-d $(find racecar_run)/config/nav.rviz"/>
+</launch>

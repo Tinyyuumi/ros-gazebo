@@ -1,0 +1,17 @@
+global_costmap:
+  trace_unknown_space: true
+  global_frame: map
+  robot_base_frame: base_link
+  use_grid_path: false
+  visualize_potential: true
+  update_frequency: 5.0
+  publish_frequency: 5.0
+  transform_tolerance: 1.0
+  
+  rolling_window: false
+  static_map: true
+  plugins: 
+      - {name: static,    type: "costmap_2d::StaticLayer"}            
+      - {name: sensor,    type: "costmap_2d::ObstacleLayer"}
+      - {name: inflation, type: "costmap_2d::InflationLayer"}
+ 

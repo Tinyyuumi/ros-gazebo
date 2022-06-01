@@ -1,0 +1,68 @@
+<?xml version="1.0"?>
+<launch>
+
+	<!-- 运行gazebo仿真环境 -->
+	<arg name="paused" default="false"/>
+    	<arg name="use_sim_time" default="true"/>
+    	<arg name="gui" default="true"/>
+    	<arg name="headless" default="false"/>
+    	<arg name="debug" default="false"/>
+    	<arg name="model" default="$(find mbot_description)/urdf/mbot.urdf" />
+
+    	
+  	<!-- We resume the logic in empty_world.launch, changing only the name of the world to be launched -->
+  	<include file="$(find gazebo_ros)/launch/empty_world.launch">
+	    <arg name="world_name" value="$(find aws_robomaker_hospital_world)/worlds/hospital_three_floors.world"/>
+   		<!-- <arg name="world_name" value="/home/ab/smartcar/src/mbot_description/worlds/amcl.world"/>  -->
+		<!-- <arg name="world_name" value="$(find robot_sim_demo)/worlds/ROS-Academy.world"/> -->
+ 		<arg name="paused" value="$(arg paused)"/>
+		<arg name="use_sim_time" value="$(arg use_sim_time)"/>
+		<arg name="gui" value="$(arg gui)"/>
+		<arg name="headless" value="$(arg headless)"/>
+		<arg name="debug" value="$(arg debug)"/>
+		<!-- <remap from="tf" to="gazebo_tf"/> -->
+  	</include>
+		
+	<!-- 模型车的位置不能修改 -->
+	<arg name="x_pos" default="0.0"/>
+	<arg name="y_pos" default="10.0"/>
+	<arg name="z_pos" default="6.3"/>
+	<arg name="roll_pos" default="0.0"/>
+	<arg name="pitch_pos" default="0.0"/>
+	<arg name="yaw_pos" default="0.0"/>
+	<!-- 初始位置：(1.4, 1.7, 0.1) -->		
+		
+
+	<!-- 加载机器人模型描述参数 -->
+	<param name="robot_description" command="$(find xacro)/xacro --inorder '$(find mbot_description)/urdf/mbot.xacro'"/>
+	
+	<!-- 在gazebo中生成机器人模型 -->
+	<node name="racecar_spawn" pkg="gazebo_ros" type="spawn_model" respawn="false" output="screen" 
+	args="-urdf -model my_robot -param robot_description -x $(arg x_pos) -y $(arg y_pos) -z $(arg z_pos) -R $(arg roll_pos) 
+	-P $(arg pitch_pos) -Y $(arg yaw_pos)"/>
+
+	<!-- 加载机器人模型描述参数 -->
+	<param name="box" command="$(find xacro)/xacro --inorder '$(find mbot_description)/urdf/box.xacro'"/>
+	
+	<!-- 在gazebo中生成机器人模型 -->
+	<!-- <node name="box_spawn" pkg="gazebo_ros" type="spawn_model" respawn="false" output="screen" 
+	args="-urdf -model my_box -param box -x 5.0 -y 10.0 -z 6.3"/> -->
+
+	<!-- convert joint states to TF transforms for rviz, etc-->
+	<node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" respawn="false" output="screen">
+		<remap from="/joint_states" to="/racecar/joint_states" />
+	</node>
+	
+	<node pkg="tf" type="static_transform_publisher" name="baselinktofront" args="0.18 0 -0.095 0 0 0 1 base_link front_caster_link 50" /> 
+	<node pkg="tf" type="static_transform_publisher" name="baselinktoback" args="-0.18 0 -0.095 0 0 0 1 base_link back_caster_link 50" /> 
+
+
+	<!-- 加载camera_control的launch文件 -->
+  	<include file="$(find robot_control)/launch/camera_control.launch"/>
+
+	<!-- 运行摄像头节点，显示图片  -->
+	<!-- <node pkg="carrace" type="follower2.py" name="robot_camera" /> -->
+    
+
+</launch>
+

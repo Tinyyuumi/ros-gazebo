@@ -1,0 +1,50 @@
+<?xml version="1.0"?>
+<launch>	
+  	<include file="$(find racecar_description)/launch/racecar.launch"/>
+
+  	<include file="$(find racecar_control)/launch/racecar_control.launch"/>
+
+
+	<!-- Allow for Gazebo to broadcast odom -->
+ 	<node pkg="racecar_run" name="gazebo_odometry_node" type="gazebo_odometry.py"/>
+
+	<arg name="map_file" default="$(find racecar_run)/map/mymap.yaml"/>
+	<node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)"/>
+	
+	<include file="$(find iris_lama_ros)/launch/loc2d.launch"/>
+
+
+	<!-- Localization -->
+  	<!-- <arg name="initial_pose_x" default="0.0"/>
+ 	<arg name="initial_pose_y" default="0.0"/>
+  	<arg name="initial_pose_a" default="0.0"/>
+  	<arg name="custom_amcl_launch_file" default="$(find racecar_run)/launch/include/amcl.launch.xml"/> 
+
+	<include file="$(arg custom_amcl_launch_file)">
+    <arg name="initial_pose_x" value="$(arg initial_pose_x)"/>
+    <arg name="initial_pose_y" value="$(arg initial_pose_y)"/>
+    <arg name="initial_pose_a" value="$(arg initial_pose_a)"/>
+  	</include> -->
+
+	<!-- Move base -->
+    <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen" clear_params="true">
+	<param name="controller_frequency" value="5.0"/> 
+	<param name="controller_patiente" value="15.0"/>
+        <rosparam file="$(find racecar_run)/param/costmap_common_params.yaml" command="load" ns="global_costmap" />
+        <rosparam file="$(find racecar_run)/param/costmap_common_params.yaml" command="load" ns="local_costmap" />
+        <rosparam file="$(find racecar_run)/param/local_costmap_params.yaml" command="load" />
+        <rosparam file="$(find racecar_run)/param/global_costmap_params.yaml" command="load" />
+
+        <rosparam file="$(find racecar_run)/param/teb_local_planner_params.yaml" command="load" />
+		<rosparam file="$(find racecar_run)/param/move_base_params.yaml" command="load" />
+		<remap from="/cmd_vel" to="nouse/cmd_vel" /> 
+		<remap from="/odom" to="/vesc/odom" /> 
+    </node>
+	
+
+
+
+
+	<!--启动rviz -->
+    <node pkg="rviz" type="rviz" name="rviz" args="-d $(find racecar_run)/config/nav.rviz"/>
+</launch>

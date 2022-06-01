@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<launch>	
+    <!-- Robot_Localization -->
+    <node pkg="robot_localization" type="ekf_localization_node" name="ekf_se" clear_params="true" output="screen">
+        <rosparam command="load" file="$(find mbot_description)/param/ekf_params.yaml" />
+    </node>  
+</launch>
